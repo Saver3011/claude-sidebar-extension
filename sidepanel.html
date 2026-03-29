@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Claude Sidebar</title>
+  <link rel="stylesheet" href="sidepanel.css" />
+</head>
+<body>
+<div id="app">
+
+  <!-- ── Header ── -->
+  <header id="header">
+    <div class="header-left">
+      <button id="backBtn" class="icon-btn hidden" title="All chats">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+      </button>
+      <div id="headerLogo" class="logo">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="10" fill="#D97706"/>
+          <text x="12" y="17" text-anchor="middle" fill="white" font-size="13" font-weight="bold" font-family="serif">C</text>
+        </svg>
+        <span>Claude</span>
+      </div>
+      <span id="headerChatTitle" class="chat-title-header hidden"></span>
+    </div>
+    <div class="header-right">
+      <!-- list-view buttons -->
+      <button id="newChatBtn" class="icon-btn" title="New chat">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+      </button>
+      <button id="settingsBtn" class="icon-btn" title="Settings">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </button>
+      <!-- chat-view buttons (hidden in list view) -->
+      <button id="captureBtnChat" class="icon-btn hidden" title="Capture page">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>
+        </svg>
+      </button>
+      <button id="exportBtnChat" class="icon-btn hidden" title="Continue in Claude.ai">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+          <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+        </svg>
+      </button>
+      <button id="deleteChatBtn" class="icon-btn hidden" title="Delete this chat">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/>
+          <path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- ── Settings Panel ── -->
+  <div id="settingsPanel" class="settings-panel hidden">
+    <div class="settings-inner">
+      <h3>Settings</h3>
+      <label for="apiKeyInput">Anthropic API Key</label>
+      <input type="password" id="apiKeyInput" placeholder="sk-ant-api03-…" autocomplete="off" />
+      <p class="hint">Stored locally. Never sent anywhere except Anthropic's API.</p>
+      <div class="settings-row">
+        <label for="modelSelect">Model</label>
+        <select id="modelSelect">
+          <option value="claude-sonnet-4-6">Claude Sonnet 4.6 (recommended)</option>
+          <option value="claude-opus-4-6">Claude Opus 4.6</option>
+          <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5 (fast)</option>
+        </select>
+      </div>
+      <button id="saveSettingsBtn" class="primary-btn">Save</button>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════
+       LIST VIEW
+  ════════════════════════════════════════════ -->
+  <div id="listView">
+    <div id="chatListEl"></div>
+
+    <!-- Empty state -->
+    <div id="listEmpty" class="list-empty hidden">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      </svg>
+      <p>No chats yet</p>
+      <p class="hint">Click + to start, or highlight text on any page and right-click → Ask Claude.</p>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════
+       CHAT VIEW
+  ════════════════════════════════════════════ -->
+  <div id="chatView" class="hidden">
+
+    <!-- Context banner -->
+    <div id="contextBanner" class="context-banner hidden">
+      <div class="banner-content">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
+        <span id="contextText"></span>
+      </div>
+      <button id="previewBtn" class="text-btn">preview</button>
+    </div>
+
+    <!-- Screenshot preview modal -->
+    <div id="previewModal" class="modal hidden">
+      <div class="modal-inner">
+        <div class="modal-header">
+          <span>Page Snapshot</span>
+          <button id="closePreview" class="icon-btn">✕</button>
+        </div>
+        <img id="previewImage" alt="snapshot" />
+      </div>
+    </div>
+
+    <!-- Chat empty state -->
+    <div id="chatEmptyState" class="chat-empty">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      </svg>
+      <p id="chatEmptyText">Ask anything…</p>
+    </div>
+
+    <!-- Messages -->
+    <div id="messages"></div>
+
+    <!-- Input Area -->
+    <div id="inputArea">
+      <div id="selectionPill" class="selection-pill hidden">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2v-4M9 21H5a2 2 0 0 1-2-2v-4m0 0h18"/>
+        </svg>
+        <span id="selectionPillText"></span>
+        <button id="clearSelectionBtn" title="Remove">✕</button>
+      </div>
+      <div class="input-wrapper">
+        <textarea id="userInput" placeholder="Ask…" rows="1"></textarea>
+        <button id="sendBtn" class="send-btn" disabled>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="22" y1="2" x2="11" y2="13"/>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+        </button>
+      </div>
+      <div id="statusBar" class="status-bar"></div>
+      <button id="openClaudeFooterBtn" class="open-claude-footer hidden">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+          <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+        </svg>
+        Continue in Claude.ai
+      </button>
+    </div>
+  </div>
+
+</div>
+<script src="sidepanel.js"></script>
+</body>
+</html>

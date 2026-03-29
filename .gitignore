@@ -1,0 +1,8 @@
+# Node
+node_modules/
+
+# Generated icons (run `node generate-icons.js` to recreate)
+# icons/ — keep icons in repo so extension loads without a build step
+
+# macOS
+.DS_Store
