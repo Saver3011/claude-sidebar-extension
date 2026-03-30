@@ -483,7 +483,7 @@ chrome.storage.onChanged.addListener((changes) => {
   const nav = changes.pageNavigated?.newValue;
   if (nav && Date.now() - nav.ts < 5_000) {
     chrome.storage.local.remove('pageNavigated');
-    handlePageNavigation(nav.url, nav.windowId);
+    handlePageNavigation(nav.url, nav.windowId, nav.title);
   }
 });
 
@@ -671,7 +671,8 @@ async function pickBestChat(candidates) {
   return candidates.reduce((a, b) => a.updatedAt > b.updatedAt ? a : b);
 }
 
-async function handlePageNavigation(url, windowId) {
+async function handlePageNavigation(url, windowId, title) {
+  let nav_title = title || '';
   saveDraft();
 
   // Verify this navigation is for the window this side panel belongs to
@@ -694,7 +695,12 @@ async function handlePageNavigation(url, windowId) {
     return cu && normalizeUrl(cu) === norm;
   });
 
-  if (matches.length === 0) { showList(); return; }
+  if (matches.length === 0) {
+    const id = makeChat('page', { url: norm, title: nav_title });
+    saveChats();
+    openChat(id);
+    return;
+  }
 
   const best = matches.length === 1 ? matches[0] : await pickBestChat(matches);
   openChat(best.id);
