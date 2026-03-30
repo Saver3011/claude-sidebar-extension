@@ -10,7 +10,8 @@
     "storage",
     "sidePanel",
     "clipboardRead",
-    "contextMenus"
+    "contextMenus",
+    "windows"
   ],
   "host_permissions": [
     "<all_urls>",

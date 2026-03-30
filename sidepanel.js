@@ -219,6 +219,8 @@ function openChat(id) {
   renderMessages();
   updateBanner();
   updateSelectionPill();
+  D.userInput.value = c.draft || '';
+  autoResize(D.userInput);
   updateSendBtn();
   D.userInput.focus();
 }
@@ -297,6 +299,7 @@ async function handleSend() {
   const c = chat();
   D.userInput.value = '';
   autoResize(D.userInput);
+  if (c.draft) c.draft = '';
   isLoading = true;
   updateSendBtn();
   D.chatEmptyState.classList.add('hidden');
@@ -474,6 +477,13 @@ chrome.storage.onChanged.addListener((changes) => {
     });
     saveChats();
     openChat(id);
+    return;
+  }
+
+  const nav = changes.pageNavigated?.newValue;
+  if (nav && Date.now() - nav.ts < 5_000) {
+    chrome.storage.local.remove('pageNavigated');
+    handlePageNavigation(nav.url, nav.windowId);
   }
 });
 
@@ -493,7 +503,7 @@ chrome.storage.local.get('claudeSelection', res => {
 
 // ─── Event wiring ─────────────────────────────────────────────────────────────
 // Back to list
-D.backBtn.addEventListener('click', () => { saveChats(); showList(); });
+D.backBtn.addEventListener('click', () => { saveDraft(); saveChats(); showList(); });
 
 // New blank chat
 D.newChatBtn.addEventListener('click', () => {
@@ -619,6 +629,75 @@ function timeAgo(ts) {
   if (d < 3600000)  return Math.floor(d / 60000)   + 'm ago';
   if (d < 86400000) return Math.floor(d / 3600000)  + 'h ago';
   return               Math.floor(d / 86400000) + 'd ago';
+}
+
+// ─── Page navigation auto-open ────────────────────────────────────────────────
+function saveDraft() {
+  if (!activeId) return;
+  chats[activeId].draft = D.userInput.value;
+  D.userInput.value = '';
+  autoResize(D.userInput);
+}
+
+function normalizeUrl(url) {
+  try { const u = new URL(url); u.hash = ''; return u.toString().replace(/\/$/, ''); }
+  catch { return url; }
+}
+
+function wordOverlap(text1, text2) {
+  if (!text1 || !text2) return 0;
+  const words = new Set((text1.toLowerCase().match(/\b\w{4,}\b/g) || []));
+  return [...words].filter(w => text2.includes(w)).length;
+}
+
+async function pickBestChat(candidates) {
+  try {
+    const res = await bg({ type: 'GET_PAGE_CONTENT' });
+    const pageText = (res.text || '').toLowerCase();
+    if (pageText.length > 50) {
+      let best = null, bestScore = -1;
+      for (const c of candidates) {
+        // Prefer selection chats whose selection text is still present on the page,
+        // then page chats, using word overlap as the relevance signal.
+        const ctxText = c.selectionCtx?.text || c.pageCtx?.text ||
+          (typeof c.conversation[0]?.content === 'string' ? c.conversation[0].content : '');
+        const score = wordOverlap(ctxText, pageText) + (c.updatedAt / 1e15);
+        if (score > bestScore) { bestScore = score; best = c; }
+      }
+      if (best) return best;
+    }
+  } catch {}
+  // Fallback: most recently updated
+  return candidates.reduce((a, b) => a.updatedAt > b.updatedAt ? a : b);
+}
+
+async function handlePageNavigation(url, windowId) {
+  saveDraft();
+
+  // Verify this navigation is for the window this side panel belongs to
+  if (windowId !== undefined) {
+    const win = await new Promise(r => chrome.windows.getCurrent({}, r));
+    if (win.id !== windowId) return;
+  }
+
+  const norm = normalizeUrl(url);
+
+  // Stay put if the current chat already belongs to this URL
+  if (activeId) {
+    const c = chats[activeId];
+    const cu = c?.pageCtx?.url || c?.selectionCtx?.url || c?.url;
+    if (cu && normalizeUrl(cu) === norm) return;
+  }
+
+  const matches = Object.values(chats).filter(c => {
+    const cu = c.pageCtx?.url || c.selectionCtx?.url || c.url;
+    return cu && normalizeUrl(cu) === norm;
+  });
+
+  if (matches.length === 0) { showList(); return; }
+
+  const best = matches.length === 1 ? matches[0] : await pickBestChat(matches);
+  openChat(best.id);
 }
 
 // ─── Boot ─────────────────────────────────────────────────────────────────────

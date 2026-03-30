@@ -1,6 +1,24 @@
 // Open the side panel when the extension icon is clicked
 chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
 
+// ─── Tab navigation tracking ──────────────────────────────────────────────────
+function storeNavigation(url, title, windowId) {
+  if (!url || url.startsWith('chrome://') || url.startsWith('chrome-extension://')) return;
+  chrome.storage.local.set({ pageNavigated: { url, title: title || '', windowId, ts: Date.now() } });
+}
+
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  if (changeInfo.status === 'complete' && tab.active) {
+    storeNavigation(tab.url, tab.title, tab.windowId);
+  }
+});
+
+chrome.tabs.onActivated.addListener(({ tabId, windowId }) => {
+  chrome.tabs.get(tabId, tab => {
+    if (!chrome.runtime.lastError) storeNavigation(tab.url, tab.title, windowId);
+  });
+});
+
 // ─── Context menu ─────────────────────────────────────────────────────────────
 chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.create({
